@@ -10,7 +10,7 @@ int main()
 {
     token A{ "Hello","ya" };
     token B{ "Bra","ya" };
-    token C{ "laal","ya" };
+    token C{ "kuku","ya" };
     token D{ "laal","ya" };
 
     tokenlist tokens = { A,B,C,D};
@@ -19,13 +19,14 @@ int main()
     UnitParser Hello = UnitParser{ "Hello" };
     UnitParser Bra = UnitParser{ "Bra" };
     UnitParser kuku = UnitParser{ "kuku" };
-
-    OrParser HelloOrHelloBrakuku = Hello * Bra * kuku | Hello;
-    HelloOrHelloBrakuku.setTerm("oraora");
+    AndParser HelloKu = Hello * kuku;
+    OrParser HelloOrBra = Hello | Bra;
+    ReturnParser HelloOrHelloBrakuku = ReturnParser("Hack", Hello * Bra * kuku | Bra * kuku );
 
     pair<ParseTree*, tokenlist*> *Result = new pair<ParseTree*, tokenlist*>();
-    //HelloBrakuku.run(tokens, Result);
+
     bool ret = HelloOrHelloBrakuku.run(tokens, Result);
+    
     cout << Result->first->content.type_name << "*\n";
     for (auto ele : tokens) {
         cout << "!!" << ele.type_name << endl;
