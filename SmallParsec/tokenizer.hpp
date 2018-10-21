@@ -14,6 +14,7 @@ public:
 };
 
 using tokenlist = list<token>;
+using TokenList = list<token>;
 
 class ParseTree {
 public:
@@ -22,6 +23,16 @@ public:
         :content(content), Parent(Parent) {}
     list<ParseTree*> child;
     ParseTree *Parent;
+};
+
+class ParseResult {
+private:
+	ParseTree *tree;
+	TokenList *rest;
+public:
+	ParseResult(ParseTree &_t, tokenlist &_r) : tree(&_t), rest(&_r) {}
+	const ParseTree* getParseTree() { return tree; }
+	const TokenList* getTokenList() { return rest; }
 };
 
 class Parser {
@@ -36,8 +47,6 @@ class OrParser : public Parser {
     Parser *p1;
     Parser *p2;
     string term;
-
-    
 
 public:
     OrParser(string term, Parser *p1, Parser *p2) : term(term), p1(p1), p2(p2) {
