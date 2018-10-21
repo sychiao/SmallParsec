@@ -14,14 +14,31 @@ public:
 };
 
 using tokenlist = list<token>;
+using TokenList = list<token>;
 
 class ParseTree {
 public:
     token content;
     ParseTree(token content, ParseTree *Parent)
         :content(content), Parent(Parent) {}
-    list<ParseTree*> child;
+    ParseTree(string content,initializer_list<const ParseTree*> childlst)
+        :content(token{content,"null"}), Parent(nullptr), child(childlst) {}
+    list<const ParseTree*> child;
     ParseTree *Parent;
+};
+
+class ParseResult {
+private:
+	ParseTree *tree;
+	const TokenList *rest;
+    bool success;
+
+public:
+    ParseResult() : success(false) {}
+    ParseResult(ParseTree &_t, const tokenlist &_r) : tree(&_t), rest(&_r) {}
+	const ParseTree& getParseTree() { return *tree; }
+	const TokenList& getTokenList() { return *rest; }
+    bool isSuccess() { return success; }
 };
 
 class Parser {
@@ -29,6 +46,7 @@ protected:
     set<string> First;
 public:
     virtual bool run(tokenlist& s, pair<ParseTree*, tokenlist*> *ret) = 0;
+    virtual ParseResult& run(const TokenList& s) = 0;
     set<string> getFirst() { return First; }
 };
 
@@ -36,8 +54,6 @@ class OrParser : public Parser {
     Parser *p1;
     Parser *p2;
     string term;
-
-    
 
 public:
     OrParser(string term, Parser *p1, Parser *p2) : term(term), p1(p1), p2(p2) {
@@ -57,6 +73,11 @@ public:
             First.insert(ele);
         }
     }
+
+    bool run(TokenList& s, ParseResult& ret) {
+        return true;
+    }
+
     void setTerm(string t) { term = t; }
     bool run(tokenlist& s, pair<ParseTree*, tokenlist*> *ret) {
         auto f1 = p1->getFirst();
@@ -114,9 +135,23 @@ public:
         return OrParser(this, &p2);
     }
 
+    ParseResult& run(const TokenList& s) {
+        ParseResult &p1ret = p1->run(s);
+        if (p1ret.isSuccess()) {
+            ParseResult &p2ret = p2->run(p1ret.getTokenList());
+            if (p2ret.isSuccess()) {
+                ParseTree *tree = new ParseTree("And", {&p1ret.getParseTree(),&p2ret.getParseTree()});
+                ParseResult *ret = new ParseResult(*tree, p2ret.getTokenList());
+                return *ret;
+            }
+        }
+        
+    }
+
     bool run(tokenlist& s, pair<ParseTree*, tokenlist*> *ret) {
         pair<ParseTree*, tokenlist*> *p1ret = new pair<ParseTree*, tokenlist*>();
         pair<ParseTree*, tokenlist*> *p2ret = new pair<ParseTree*, tokenlist*>();
+
         if (p1->run(s, p1ret)) {
             if (p2->run(*(p1ret->second), p2ret)) {
                 ret->first = new ParseTree{ token{"And","null"} , nullptr };
@@ -162,6 +197,11 @@ public:
         for (auto ele : p1.getFirst())
             First.insert(ele);
     }
+
+    bool run(TokenList& s, ParseResult& ret) {
+        return true;
+    }
+
     bool run(tokenlist& s, pair<ParseTree*, tokenlist*> *ret) {
         pair<ParseTree*, tokenlist*> *p1ret = new pair<ParseTree*, tokenlist*>();
         p1->run(s, p1ret);
@@ -189,6 +229,10 @@ public:
 
     OrParser operator|(Parser &p2) {
         return OrParser(this, &p2);
+    }
+
+    bool run(TokenList& s, ParseResult& ret) {
+        return true;
     }
 
     bool run(tokenlist& s, pair<ParseTree*, tokenlist*> *ret) {
