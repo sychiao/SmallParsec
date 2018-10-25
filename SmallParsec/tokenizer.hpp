@@ -2,6 +2,7 @@
 #include <string>
 #include <list>
 #include <set>
+#include <vector>
 
 using namespace std;
 
@@ -22,6 +23,8 @@ public:
 	ParseTree(token content, ParseTree *Parent)
 		:content(content), Parent(Parent) {}
 	ParseTree(string content, initializer_list<const ParseTree*> childlst)
+		:content(token{ content,"null" }), Parent(nullptr), child(childlst) {}
+	ParseTree(string content, list<const ParseTree*> childlst)
 		:content(token{ content,"null" }), Parent(nullptr), child(childlst) {}
 	list<const ParseTree*> child;
 	ParseTree *Parent;
@@ -57,6 +60,10 @@ class OrParser : public Parser {
 
 public:
 	OrParser():init(false){}
+
+	OrParser operator|(Parser &p2) {
+		return OrParser(this, &p2);
+	}
 
 	void SetParser1(Parser *p) {
 		p1 = p;
@@ -105,24 +112,57 @@ public:
 class AndParser : public Parser {
 	Parser *p1;
 	Parser *p2;
+	vector<Parser*> *plst;
 	bool init = true;
 
 public:
-	AndParser() : init(false) {}
-
-	void SetParser1(Parser *p) {
-		p1 = p;
-	}
-	void SetParser2(Parser *p) {
-		p2 = p;
+	AndParser() : init(false) {
+		cout << "init\n";
 	}
 
-	AndParser(Parser *p1, Parser *p2) : p1(p1), p2(p2) {
+	AndParser operator*(Parser &p2) {
+		Add(&p2);
+		return *this;
+	}
+
+	OrParser operator|(Parser &p2) {
+		return OrParser(this, &p2);
+	}
+
+	void Add(Parser *_p) {
+		plst->push_back(_p);
+	}
+
+	AndParser(Parser *_p1, Parser *_p2) : p1(_p1), p2(_p2) {
+		plst = new vector<Parser*>();
+		plst->push_back(_p1);
+		plst->push_back(_p2);
 		for (auto ele : p1->getFirst()) {
 			First.insert(ele);
 		}
 	}
+
 	ParseResult& run(const TokenList& s) {
+		list<const ParseTree*> child;
+		TokenList token(s);
+		int size = (*plst).size();
+		for (Parser* p : *plst) {
+			ParseResult &pret = p->run(token);
+			if (pret.isSuccess()) {
+				child.push_back(&pret.getParseTree());
+				token = pret.getTokenList();
+			}
+			else {
+				ParseResult *ret = new ParseResult();
+				return *ret;
+			}
+		}
+
+		ParseTree *tree = new ParseTree("And", child);
+		ParseResult *ret = new ParseResult(*tree, token);
+		return *ret;
+		
+		/*
 		ParseResult &p1ret = p1->run(s);
 		if (p1ret.isSuccess()) {
 			ParseResult &p2ret = p2->run(p1ret.getTokenList());
@@ -134,55 +174,23 @@ public:
 		}
 		ParseResult *ret = new ParseResult();
 		return *ret;
+		*/
 	}
 };
-/*
-class ReturnParser : public Parser {
-	string Name;
-	Parser *p1;
-
-	void AndConcate(ParseTree* tree, list<ParseTree*> &child) {
-		for (auto subtree : tree->child) {
-			if (subtree->content.type_name == "And") {
-				AndConcate(subtree, child);
-			}
-			else {
-				cout << subtree->content.type_name << endl;
-				child.push_back(subtree);
-			}
-		}
-	}
-
-public:
-	ReturnParser(string Name, Parser &p1) :Name(Name), p1(&p1) {
-		for (auto ele : p1.getFirst())
-			First.insert(ele);
-	}
-
-	bool run(TokenList& s, ParseResult& ret) {
-		return true;
-	}
-
-	bool run(tokenlist& s, pair<ParseTree*, tokenlist*> *ret) {
-		pair<ParseTree*, tokenlist*> *p1ret = new pair<ParseTree*, tokenlist*>();
-		p1->run(s, p1ret);
-
-		list<ParseTree*> child;
-		AndConcate(p1ret->first, child);
-
-		ret->first = new ParseTree{ token{Name,"null"} , nullptr };
-		ret->first->child = child;
-		ret->second = p1ret->second;
-		return true;
-	}
-};
-*/
 
 class UnitParser : public Parser {
 	string Unit;
 public:
 	UnitParser(string unit) : Unit(unit) {
 		First.insert(unit);
+	}
+
+	AndParser operator*(Parser &p2) {
+		return AndParser(this, &p2);
+	}
+
+	OrParser operator|(Parser &p2) {
+		return OrParser(this, &p2);
 	}
 
 	ParseResult& run(const TokenList& s) {

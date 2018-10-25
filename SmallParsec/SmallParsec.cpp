@@ -21,13 +21,16 @@ int main()
     UnitParser Bra = UnitParser{ "Bra" };
     UnitParser kuku = UnitParser{ "kuku" };
 
-	OrParser *AA = new OrParser();
-	AndParser *EA = new AndParser(&kuku,AA);
-	AA->SetParser1(EA);
-	AA->SetParser2(&kuku);
+	OrParser AA;
+	AndParser kuAA = AndParser{ &kuku, &AA };
+
+	AndParser ptr = kuku * AA;
+
+	AA = kuku * AA | kuku;
+
 
 	int i = 0;
-	ParseResult ret = AA->run(tokenss);
+	ParseResult ret = AA.run(tokenss);
 
     for (auto ele : tokens) {
         cout << "!!" << ele.type_name << endl;
