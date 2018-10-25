@@ -14,20 +14,21 @@ int main()
     token D{ "laal","ya" };
 
     tokenlist tokens = { A,B,C,D};
+	tokenlist tokenss = { C,C,C,D };
 
 
     UnitParser Hello = UnitParser{ "Hello" };
     UnitParser Bra = UnitParser{ "Bra" };
     UnitParser kuku = UnitParser{ "kuku" };
-    AndParser HelloKu = Hello * kuku;
-    OrParser HelloOrBra = Hello | Bra;
-    ReturnParser HelloOrHelloBrakuku = ReturnParser("Hack", Hello * Bra * kuku | Bra * kuku );
 
-    pair<ParseTree*, tokenlist*> *Result = new pair<ParseTree*, tokenlist*>();
+	OrParser *AA = new OrParser();
+	AndParser *EA = new AndParser(&kuku,AA);
+	AA->SetParser1(EA);
+	AA->SetParser2(&kuku);
 
-    bool ret = HelloOrHelloBrakuku.run(tokens, Result);
-    
-    cout << Result->first->content.type_name << "*\n";
+	int i = 0;
+	ParseResult ret = AA->run(tokenss);
+
     for (auto ele : tokens) {
         cout << "!!" << ele.type_name << endl;
     }
