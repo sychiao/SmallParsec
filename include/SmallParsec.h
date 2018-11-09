@@ -93,27 +93,16 @@ class AndParser : public Parser {
 public:
     AndParser() : init(false) {}
 
-    AndParser operator*(Parser &p2) {
-        Add(&p2);
-        return *this;
-    }
-
-    OrParser operator|(Parser &p2) {
-        return OrParser(this, &p2);
-    }
-
-    void Add(Parser *_p) {
-        plst->push_back(_p);
-    }
-
     AndParser(Parser *_p1, Parser *_p2) : p1(_p1), p2(_p2) {
         plst = new vector<Parser*>();
         plst->push_back(_p1);
         plst->push_back(_p2);
-        for (auto ele : p1->getFirst()) {
-            First.insert(ele);
-        }
     }
+
+    AndParser operator*(Parser &p2);
+    OrParser operator|(Parser &p2);
+
+    void Add(Parser *_p);
 
     ParseResult& run(const TokenList& s) override;
 };
@@ -123,13 +112,8 @@ class UnitParser : public Parser {
 public:
     UnitParser(string unit) : Unit(unit) {}
 
-    AndParser operator*(Parser &p2) {
-        return AndParser(this, &p2);
-    }
-
-    OrParser operator|(Parser &p2) {
-        return OrParser(this, &p2);
-    }
+    AndParser operator*(Parser &p2);
+    OrParser operator|(Parser &p2);
 
     ParseResult& run(const TokenList& s) override;
 };

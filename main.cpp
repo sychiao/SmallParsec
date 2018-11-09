@@ -39,11 +39,15 @@ int main()
     OrParser Term;
     OrParser Expr;
 
+    tokenlist expr = { N,P,N,T,N,P,N};
+
     Term = Num * Times * Term | Num;
     Expr = Term * Plus * Expr | Term;
 
+
 	int i = 0;
 	ParseResult ret = AA.run(tokenss);
+    ParseResult ret2 = Expr.run(expr);
 
     for (auto ele : tokens) {
         cout << "!!!" << ele.type_name << endl;

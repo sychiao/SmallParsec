@@ -21,22 +21,16 @@ ParseResult& AndParser::run(const TokenList& s) {
     return *ret;
 }
 
-ParseResult& UnitParser::run(const TokenList& s) {
-    //std::cout << "run Unit\n";
-    if (s.size() < 1) {
-        ParseResult *ret = new ParseResult();
-        return *ret;
-    }
 
-    if (s.front().type_name == Unit) {
-        ParseTree *tree = new ParseTree{ s.front() ,nullptr };
-        tokenlist *newlst = new tokenlist{ s };
-        newlst->pop_front();
-        ParseResult *ret = new ParseResult(*tree, *newlst);
-        return *ret;
-    }
-    else {
-        ParseResult *ret = new ParseResult();
-        return *ret;
-    }
+void AndParser::Add(Parser *_p) {
+    plst->push_back(_p);
+}
+
+AndParser AndParser::operator*(Parser &p2) {
+    Add(&p2);
+    return *this;
+}
+
+OrParser AndParser::operator|(Parser &p2) {
+    return OrParser(this, &p2);
 }
