@@ -7,12 +7,13 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 steps:
-- script: echo Hello, world!
+- script: mkdir build
   displayName: 'Run a one-line script'
 
 - task: CMake@1
   inputs:
     workingDirectory: 'build'
+    cmakeArgs: '..'
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
