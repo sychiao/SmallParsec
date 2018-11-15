@@ -11,8 +11,8 @@ steps:
   displayName: 'Run a one-line script'
 
 - task: CMake@1
-    inputs:
-      workingDirectory: 'build'
+  inputs:
+    workingDirectory: 'build'
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
