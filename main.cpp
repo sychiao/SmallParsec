@@ -45,8 +45,8 @@ int main()
     Expr = Term * Plus * Expr | Term;
 
 
-	int i = 0;
-	ParseResult ret = AA.run(tokenss);
+    int i = 0;
+    ParseResult ret = AA.run(tokenss);
     ParseResult ret2 = Expr.run(expr);
 
     for (auto ele : tokens) {
