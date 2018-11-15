@@ -15,8 +15,5 @@ steps:
     workingDirectory: 'build'
     cmakeArgs: '..'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    make -C build
-    echo See https://aka.ms/yaml
+- script: make -C build
   displayName: 'Run a multi-line script'
